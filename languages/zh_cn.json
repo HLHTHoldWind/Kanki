@@ -1,0 +1,34 @@
+{
+  "language_name": "简体中文",
+
+  "main.title": "Kanki",
+  "main.setting": "配置",
+  "config.lang": "语言",
+  "config.account_name": "玩家id",
+  "config.ui_lang": "显示语言",
+  "config.dst_lang": "目标语言",
+  "config.default_lang": "默认来源语言",
+  "config.custom_url": "自定义谷歌翻译服务器地址",
+  "config.custom_url.tip": "在官方谷歌服务不可用时（例如中国大陆）\n需手动指定当地的谷歌翻译服务器地址",
+  "config.proxy": "Proxy",
+  "config.proxy.enable": "启用代理",
+  "config.proxy.auto": "自动设置代理",
+  "config.proxy.url": "代理地址",
+  "config.misc": "其他",
+  "config.restart.tip": "* 代表重启后生效",
+  "config.game_path": "CS游戏根目录地址",
+  "config.game_path.btn": "选择",
+  "config.basic": "基础设定",
+  "config.shortcut": "快捷键",
+  "config.shortcut.selftrans": "发送消息一键翻译",
+  "config.shortcut.toggle": "启用/禁用界面",
+  "config.interface": "界面",
+  "config.interface.fps": "帧率",
+  "config.interface.flip": "文字翻动",
+
+  "miniicon.show": "显示/隐藏 Kanki",
+  "miniicon.quit": "关闭 Kanki",
+
+  "error.game_root": "无法找到CS地址!",
+  "error.game_log": "console.log无输出!"
+}

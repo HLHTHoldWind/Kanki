@@ -1,0 +1,33 @@
+{
+  "language_name": "繁體中文",
+
+  "main.title": "カンキ",
+  "main.setting": "配置",
+  "config.lang": "語言",
+  "config.account_name": "玩家id",
+  "config.ui_lang": "軟體顯示語言",
+  "config.dst_lang": "目標語言",
+  "config.default_lang": "預設源語言",
+  "config.custom_url": "自訂Google翻譯伺服器地址",
+  "config.custom_url.tip": "當官方伺服器不可用時z需要手動配置",
+  "config.proxy": "Proxy",
+  "config.proxy.enable": "啓用Proxy",
+  "config.proxy.auto": "自動設定proxy",
+  "config.proxy.url": "Proxy地址",
+  "config.misc": "雜項",
+  "config.restart.tip": "* 代表僅重新啓動程式后生效",
+  "config.game_path": "Counter Strike游戲資料夾位置",
+  "config.game_path.btn": "選擇",
+  "config.basic": "基本設定",
+  "config.shortcut": "快速鍵",
+  "config.shortcut.selftrans": "按下翻譯輸入文本",
+  "config.interface": "用戶界面",
+  "config.interface.fps": "幀速率",
+  "config.interface.flip": "滾字牌",
+
+  "miniicon.show": "顯示/隱藏カンキ",
+  "miniicon.quit": "退出カンキ",
+
+  "error.game_root": "找不到Counter Strike游戲資料夾!",
+  "error.game_log": "console.log無輸出!"
+}

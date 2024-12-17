@@ -1,0 +1,34 @@
+{
+  "language_name": "日本語",
+
+  "main.title": "カンキ",
+  "main.setting": "設定",
+  "config.lang": "言語",
+  "config.misc": "その他",
+  "config.restart.tip": "* この変更を適用するために再起動が必要であることを意味します",
+  "config.basic": "基本設定",
+  "config.shortcut": "ショートカット",
+  "config.interface": "インターフェース",
+  "config.interface.fps": "FPS",
+  "config.interface.flip": "フリップ文字",
+
+  "miniicon.show": "カンキを表示/非表示",
+  "miniicon.quit": "カンキを出る",
+
+  "error.game_root": "Can't find cs directory!",
+  "error.game_log": "No cs console.log on recording!",
+  "config.account_name": "Main player id",
+  "config.ui_lang": "Software language",
+  "config.dst_lang": "Target language",
+  "config.default_lang": "Default source language",
+  "config.custom_url": "Custom translate service URL",
+  "config.custom_url.tip": "Some regions like Mainland China, can't use official Google service\n need to input the local Google service URL",
+  "config.proxy": "Proxy",
+  "config.proxy.enable": "Enable proxy",
+  "config.proxy.auto": "Auto set proxy",
+  "config.proxy.url": "Proxy address",
+  "config.game_path": "CS root directory path",
+  "config.game_path.btn": "Choose dir",
+  "config.shortcut.selftrans": "Fast translate your message",
+  "config.shortcut.toggle": "Toggle display overlay"
+}
