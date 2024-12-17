@@ -299,23 +299,32 @@ class MainWindow(Window):
 
         self.focus_set()
         self.stop_gyrate = True
-        artist, title, info, session, paused = asyncio.run(kanki.get_media_info())
-        if not paused:
-            kanki.pause(session)
-        else:
-            kanki.play(session)
+        try:
+            artist, title, info, session, paused = asyncio.run(kanki.get_media_info())
+            if not paused:
+                kanki.pause(session)
+            else:
+                kanki.play(session)
+        except TypeError:
+            pass
 
         self.stop_gyrate = False
 
     def skip_next(self, event=None):
         self.focus_set()
-        artist, title, info, session, paused = asyncio.run(kanki.get_media_info())
-        kanki.next_s(session)
+        try:
+            artist, title, info, session, paused = asyncio.run(kanki.get_media_info())
+            kanki.next_s(session)
+        except TypeError:
+            pass
 
     def skip_previous(self, event=None):
         self.focus_set()
-        artist, title, info, session, paused = asyncio.run(kanki.get_media_info())
-        kanki.previous(session)
+        try:
+            artist, title, info, session, paused = asyncio.run(kanki.get_media_info())
+            kanki.previous(session)
+        except TypeError:
+            pass
 
     def check_pause(self):
         while True:
