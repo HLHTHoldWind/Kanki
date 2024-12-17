@@ -1,4 +1,5 @@
 import asyncio
+import os
 from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessionManager as MediaManager
 from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSession as MediaControl
 from winsdk.windows.storage.streams import DataReader, Buffer, InputStreamOptions
@@ -133,6 +134,13 @@ async def main():
 def run():
     with open("basic\\paused.txt", "wb") as _f:
         _f.write("paused".encode("utf-8"))
+
+    if not os.path.exists("basic\\artist.txt"):
+        with open("basic\\artist.txt", "w") as _f:
+            _f.write("Not Playing")
+    if not os.path.exists("basic\\title.txt"):
+        with open("basic\\title.txt", "w") as _f:
+            _f.write("Not Playing")
     # asyncio.run(control_main())
     asyncio.run(main())
 
