@@ -58,6 +58,9 @@ class MainWindow(Window):
         self.small = SmallIcon(self, name="Main", icon=Image.open("assets\\music_icon.ico"), title="Kanki")
         self.small.run_detached()
 
+        self.load_l = Label(self)
+        widget.label_print(self.load_l, "ikura（いくら）")
+
         icon = ImageTk.PhotoImage(self.icon.resize((zoom(75), zoom(75))))
         IMG_CACHE.append(icon)
 
@@ -190,7 +193,9 @@ class MainWindow(Window):
         if self.flipping_text:
             self.title_label.configure(text="")
             self.artist_label.configure(text="")
-            Thread(target=widget.label_print, args=(self.title_label, title)).start()
+            delay = 0.75 if len(title) > 20 else 0.25
+            fps = 60 if len(title) > 20 else 30
+            Thread(target=widget.label_print, args=(self.title_label, title, delay, True, 0.75, fps)).start()
             time.sleep(0.25)
             Thread(target=widget.label_print, args=(self.artist_label, artist)).start()
         self.stop_scrolling = False
