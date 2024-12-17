@@ -131,6 +131,17 @@ class MainWindow(Window):
         Thread(target=self.check_pause).start()
 
     def delete(self, event=None):
+        self.toolbar = False
+        widget.move_to(self.toolbar_frame, x=zoom(75), y=zoom(100), width=zoom(150), height=zoom(0),
+                       fps=FPS, delay=0.25)
+        x = 0
+        y = 0
+        width = self.winfo_width()
+        height = self.winfo_height()
+        widget.move_to(self.main_widget, fps=FPS, x=x, y=y, width=zoom(75), height=height)
+        time.sleep(0.5)
+        widget.withdraw(self, fps=FPS, is_windows=True, direction="e")
+        time.sleep(0.5)
         self.quit()
         os._exit(114514)
         self.destroy()
@@ -621,8 +632,6 @@ class SmallIcon(pystray.Icon):
     def quit_window(self):
         self.visible = False
         self.stop()
-        widget.withdraw(self.master, fps=FPS, is_windows=True, direction="e")
-        time.sleep(0.5)
         self.master.delete()
 
     def setting_window(self):
