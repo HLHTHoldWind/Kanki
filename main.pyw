@@ -11,10 +11,10 @@ def get_info(root):
     _ti = ""
     _ar = ""
     while True:
-        with open("basic\\artist.txt", "rb") as f:
+        with open(f"{LOCAL_PATH}\\artist.txt", "rb") as f:
             artist = f.read().decode("utf-8")
 
-        with open("basic\\title.txt", "rb") as f:
+        with open(f"{LOCAL_PATH}\\title.txt", "rb") as f:
             title = f.read().decode("utf-8")
         if _ar != artist or _ti != title:
             _ti = title

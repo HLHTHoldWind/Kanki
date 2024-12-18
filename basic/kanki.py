@@ -4,6 +4,7 @@ from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSessi
 from winsdk.windows.media.control import GlobalSystemMediaTransportControlsSession as MediaControl
 from winsdk.windows.storage.streams import DataReader, Buffer, InputStreamOptions
 from PIL import Image
+from basic.constants import *
 import time
 
 
@@ -39,13 +40,13 @@ async def get_session():
 
 def pause(session):
     session.try_pause_async()
-    with open("basic\\paused.txt", "w") as f:
+    with open(f"{LOCAL_PATH}\\paused.txt", "w") as f:
         f.write("paused")
 
 
 def play(session):
     session.try_play_async()
-    with open("basic\\paused.txt", "w") as f:
+    with open(f"{LOCAL_PATH}\\paused.txt", "w") as f:
         f.write("play")
 
 
@@ -71,7 +72,7 @@ def get_tick(session):
 
 async def control_main():
     while True:
-        with open("basic\\paused.txt", "rb") as f:
+        with open(f"{LOCAL_PATH}\\paused.txt", "rb") as f:
             if f.read().decode("utf-8") == "paused":
                 session = await get_session()
                 paused = get_paused(session)
@@ -111,7 +112,7 @@ async def main():
             #     continue
             if artist == "":
                 artist = info.album_artist
-            with open("basic\\paused.txt", "w") as f:
+            with open(f"{LOCAL_PATH}\\paused.txt", "w") as f:
                 if paused:
                     f.write("paused")
                 else:
@@ -119,10 +120,10 @@ async def main():
             if _ar != artist or _ti != title:
                 _ti = title
                 _ar = artist
-                with open("basic\\artist.txt", "wb") as f:
+                with open(f"{LOCAL_PATH}\\artist.txt", "wb") as f:
                     f.write(artist.encode("utf-8"))
 
-                with open("basic\\title.txt", "wb") as f:
+                with open(f"{LOCAL_PATH}\\title.txt", "wb") as f:
                     f.write(title.encode("utf-8"))
         except (TypeError, PermissionError, OSError, AttributeError):
             pass
@@ -132,14 +133,14 @@ async def main():
 
 
 def run():
-    with open("basic\\paused.txt", "wb") as _f:
+    with open(f"{LOCAL_PATH}\\paused.txt", "wb") as _f:
         _f.write("paused".encode("utf-8"))
 
-    if not os.path.exists("basic\\artist.txt"):
-        with open("basic\\artist.txt", "w") as _f:
+    if not os.path.exists(f"{LOCAL_PATH}\\artist.txt"):
+        with open(f"{LOCAL_PATH}\\artist.txt", "w") as _f:
             _f.write("Not Playing")
-    if not os.path.exists("basic\\title.txt"):
-        with open("basic\\title.txt", "w") as _f:
+    if not os.path.exists(f"{LOCAL_PATH}\\title.txt"):
+        with open(f"{LOCAL_PATH}\\title.txt", "w") as _f:
             _f.write("Not Playing")
     # asyncio.run(control_main())
     asyncio.run(main())

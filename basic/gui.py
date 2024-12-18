@@ -44,7 +44,7 @@ class MainWindow(Window):
         self.flipping_text = flipping
         FPS = fps
 
-        with open("basic\\paused.txt", "rb") as f:
+        with open(f"{LOCAL_PATH}\\paused.txt", "rb") as f:
             if f.read().decode("utf-8") == "paused":
                 self.paused = True
             else:
@@ -328,7 +328,7 @@ class MainWindow(Window):
 
     def check_pause(self):
         while True:
-            with open("basic\\paused.txt", "r") as f:
+            with open(f"{LOCAL_PATH}\\paused.txt", "r") as f:
                 status = f.read()
                 if status == "paused" and not self.paused:
                     self.paused = True
