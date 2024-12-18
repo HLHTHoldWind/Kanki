@@ -1,7 +1,7 @@
 # Kanki (カンキ)
 A desktop mini program to show the song now you're playing.
 
-![image](https://github.com/user-attachments/assets/9e65bd2e-b076-4305-93f5-766c3f1a928e)
+![image](https://github.com/user-attachments/assets/24fa04ae-9a0f-4650-bbb9-06514cfa60fc)
 
 ## What is this?
 - A mini program running on Windows that can show what music now are you playing.
