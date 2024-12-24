@@ -125,8 +125,8 @@ async def main():
 
                 with open(f"{LOCAL_PATH}\\title.txt", "wb") as f:
                     f.write(title.encode("utf-8"))
-        except (TypeError, PermissionError, OSError, AttributeError):
-            pass
+        except (TypeError, PermissionError, OSError, AttributeError) as e:
+            print(e)
         # print(f"Time Usage ({times}): {time.time() - start}s")
         time.sleep(0.1)
         times += 1

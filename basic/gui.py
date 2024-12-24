@@ -305,8 +305,8 @@ class MainWindow(Window):
                 kanki.pause(session)
             else:
                 kanki.play(session)
-        except TypeError:
-            pass
+        except TypeError as e:
+            print(f"TypeError: {e}")
 
         self.stop_gyrate = False
 
@@ -316,15 +316,15 @@ class MainWindow(Window):
             artist, title, info, session, paused = asyncio.run(kanki.get_media_info())
             kanki.next_s(session)
         except TypeError:
-            pass
+            print(f"TypeError: {e}")
 
     def skip_previous(self, event=None):
         self.focus_set()
         try:
             artist, title, info, session, paused = asyncio.run(kanki.get_media_info())
             kanki.previous(session)
-        except TypeError:
-            pass
+        except TypeError as e:
+            print(f"TypeError: {e}")
 
     def check_pause(self):
         while True:
@@ -569,8 +569,8 @@ class ConfigurateWindow(Toplevel):
                 self.attributes('-topmost', True)
                 self.lift()
                 time.sleep(0.01)
-            except tk.TclError:
-                break
+            except tk.TclError as e:
+                print(f"tk.TclError: {e}")
 
     def set_flip(self, event=None):
         p_state = self.flip_bool.get()
