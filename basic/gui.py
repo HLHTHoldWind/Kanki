@@ -315,7 +315,7 @@ class MainWindow(Window):
         try:
             artist, title, info, session, paused = asyncio.run(kanki.get_media_info())
             kanki.next_s(session)
-        except TypeError:
+        except TypeError as e:
             print(f"TypeError: {e}")
 
     def skip_previous(self, event=None):
