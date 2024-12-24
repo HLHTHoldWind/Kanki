@@ -14,13 +14,13 @@ async def get_media_info():
     # if current_session and ("ZuneMusic" in current_session.source_app_user_model_id or
     #                         "Spotify" in current_session.source_app_user_model_id):
     # print(current_session.source_app_user_model_id)
-    if current_session and ("ZuneMusic" in current_session.source_app_user_model_id or
-                            "Spotify" in current_session.source_app_user_model_id or
-                            "Musbox" in current_session.source_app_user_model_id or
-                            "122165AE053F" in current_session.source_app_user_model_id):
+    try:
         info = await current_session.try_get_media_properties_async()
         paused = get_paused(current_session)
         return info.artist, info.title, info, current_session, paused
+    except AttributeError as e:
+        print(e)
+        return "", "", None, current_session, True
 
 
 async def read_stream_into_buffer(stream_ref, buffer):

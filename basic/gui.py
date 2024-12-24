@@ -305,8 +305,8 @@ class MainWindow(Window):
                 kanki.pause(session)
             else:
                 kanki.play(session)
-        except TypeError as e:
-            print(f"TypeError: {e}")
+        except (TypeError, AttributeError) as e:
+            print(f"{e}")
 
         self.stop_gyrate = False
 
@@ -315,16 +315,16 @@ class MainWindow(Window):
         try:
             artist, title, info, session, paused = asyncio.run(kanki.get_media_info())
             kanki.next_s(session)
-        except TypeError as e:
-            print(f"TypeError: {e}")
+        except (TypeError, AttributeError) as e:
+            print(f"{e}")
 
     def skip_previous(self, event=None):
         self.focus_set()
         try:
             artist, title, info, session, paused = asyncio.run(kanki.get_media_info())
             kanki.previous(session)
-        except TypeError as e:
-            print(f"TypeError: {e}")
+        except (TypeError, AttributeError) as e:
+            print(f"{e}")
 
     def check_pause(self):
         while True:
