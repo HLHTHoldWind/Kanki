@@ -7,6 +7,38 @@ WORK_PATH = os.getcwd()
 USER_PATH = os.path.expanduser('~')
 CONFIG = configparser.ConfigParser()
 
+C_START = int("4E00", base=16)
+C_END = int("9FFF", base=16)
+B_START = int("3105", base=16)
+B_END = int("3129", base=16)
+J1_START = int("3000", base=16)
+J1_END = int("30FF", base=16)
+J2_START = int("FF00", base=16)
+J2_END = int("FFEF", base=16)
+P_START = int("FF00", base=16)
+P_END = int("FFEF", base=16)
+R_START = int("0400", base=16)
+R_END = int("04FF", base=16)
+
+C_LIST = []
+J_LIST = []
+P_LIST = []
+R_LIST = []
+for char in range(B_START, B_END + 1):
+    C_LIST.append(chr(char))
+
+for char in range(C_START, C_END + 1):
+    C_LIST.append(chr(char))
+
+for char in range(J1_START, J1_END + 1):
+    J_LIST.append(chr(char))
+
+for char in range(J2_START, J2_END + 1):
+    J_LIST.append(chr(char))
+
+for char in range(R_START, R_END + 1):
+    R_LIST.append(chr(char))
+
 
 class Color:
 

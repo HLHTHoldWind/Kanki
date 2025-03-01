@@ -53,6 +53,8 @@ class MainWindow(Window):
         self.protocol("WM_DELETE_WINDOW", self.delete)
         windowInit(self, 300, 300, False, "Kanki", "assets\\music_icon.ico")
         self.icon = Image.open("assets\\music_icon.png").resize((zoom(100), zoom(100)))
+        self.ring = Image.open("assets\\kanki_ring.png").resize((zoom(100), zoom(100)))
+        self.inner = Image.open("assets\\kanki_inner.png").resize((zoom(100), zoom(100)))
         self.overrideredirect(True)
         self.attributes("-toolwindow", True)
         self.small = SmallIcon(self, name="Main", icon=Image.open("assets\\music_icon.ico"), title="Kanki")
@@ -77,6 +79,9 @@ class MainWindow(Window):
         self.load_animation()
 
         self.main_widget = Frame(self)
+
+        self.font_ti = tk.font.Font(family="Microsoft Yahei UI", size=20, weight="bold")
+        self.font_ar = tk.font.Font(family="Microsoft Yahei UI", size=15)
 
         # self.icon_label = Canvas(self.main_widget, background="#1b1b1b", borderwidth=0, highlightthickness=0)
         self.icon_label = Label(self.main_widget, background="#1b1b1b", borderwidth=0, cursor="hand2")
@@ -130,6 +135,22 @@ class MainWindow(Window):
         Thread(target=self.scrolling_a).start()
         Thread(target=self.check_pause).start()
 
+    def set_japanese_mode(self):
+        self.font_ti = tk.font.Font(family="Yu Gothic", size=22, weight="bold")
+        self.font_ar = tk.font.Font(family="Yu Gothic", size=16)
+        self.artist_label.configure(font=("Yu Gothic", 16))
+        self.artist_label2.configure(font=("Yu Gothic", 16))
+        self.title_label.configure(font=("Yu Gothic", 22, "bold"))
+        self.title_label2.configure(font=("Yu Gothic", 22, "bold"))
+
+    def set_normal_mode(self, index=0):
+        self.font_ti = tk.font.Font(family="Microsoft Yahei UI", size=20, weight="bold")
+        self.font_ar = tk.font.Font(family="Microsoft Yahei UI", size=15)
+        self.artist_label.configure(font=("Microsoft Yahei UI", 15))
+        self.artist_label2.configure(font=("Microsoft Yahei UI", 15))
+        self.title_label.configure(font=("Microsoft Yahei UI", 20, "bold"))
+        self.title_label2.configure(font=("Microsoft Yahei UI", 20, "bold"))
+
     def delete(self, event=None):
         self.toolbar = False
         widget.move_to(self.toolbar_frame, x=zoom(75), y=zoom(100), width=zoom(150), height=zoom(0),
@@ -149,12 +170,16 @@ class MainWindow(Window):
     def load_animation(self):
         global IMG_CACHE, IMG_CACHE2, IMG_CACHE3
         IMG_CACHE = []
+        base = self.inner
         for i in range(600):
             name = f"gyrating_{i}"
             if not os.path.exists(f"assets\\gyrating\\{name}"):
-                img = self.icon.rotate(i * 0.6 * -1, resample=Image.BILINEAR)
+                ring = self.ring.rotate(i * 0.6 * -1, resample=Image.BILINEAR)
+                img = Image.new("RGBA", (self.ring.width, self.ring.height))
+                # img.paste(base, (0, 0))  # if use new icon
+                img.paste(ring, (0, 0), ring)
                 img.save(f"assets\\gyrating\\{name}", "PNG")
-            IMG_CACHE.append(ImageTk.PhotoImage(Image.open(f"assets\\gyrating\\{name}").resize((zoom(75), zoom(75)))))
+            IMG_CACHE.append(ImageTk.PhotoImage(Image.open(f"assets\\gyrating\\{name}").resize((zoom(75), zoom(75)), resample=Image.BILINEAR)))
 
         IMG_CACHE2 = []
         im = Image.open("assets\\pausing.gif")
@@ -186,8 +211,12 @@ class MainWindow(Window):
         self.stop_scrolling = True
 
         time.sleep(0.75)
-        self.length = length = tk.font.Font(family="Microsoft Yahei UI", size=20, weight="bold").measure(title)
-        self.length2 = length2 = tk.font.Font(family="Microsoft Yahei UI", size=15).measure(artist)
+        if check_japanese(title) or check_japanese(artist):
+            self.set_japanese_mode()
+        else:
+            self.set_normal_mode()
+        self.length = length = self.font_ti.measure(title)
+        self.length2 = length2 = self.font_ar.measure(artist)
         self.title_label.configure(text=title)
         self.title_label2.configure(text=title)
         self.title_label.place(x=zoom(0), y=zoom(0), width=length, height=zoom(37))
@@ -663,6 +692,13 @@ class SmallIcon(pystray.Icon):
             time.sleep(0.5)
             self.master.withdraw()
             self.show = False
+
+
+def check_japanese(string):
+    for i in string:
+        if i in J_LIST:
+            return True
+    return False
 
 
 def windowInit(master, width: int, height: int, canResize: bool, title: str, icon: str):
