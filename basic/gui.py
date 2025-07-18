@@ -5,6 +5,7 @@ import time
 import subprocess
 import urllib
 import zipfile
+from basic.updater import check_version
 from threading import Thread
 import os
 import asyncio
@@ -50,6 +51,9 @@ class MainWindow(Window):
         self.need_update = False
         self.flipping_text = flipping
         FPS = fps
+
+        if check_version():
+            self.need_update = True
 
         with open(f"{LOCAL_PATH}\\paused.txt", "rb") as f:
             if f.read().decode("utf-8") == "paused":

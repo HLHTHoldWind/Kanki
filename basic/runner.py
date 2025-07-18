@@ -32,8 +32,6 @@ def main():
         Thread(target=kanki.run).start()
         root = gui.MainWindow(flipping=flip, fps=fps)
         Thread(target=get_info, args=(root,)).start()
-        if check_version():
-            root.need_update = True
         debug(f"Starting took {time.time() - start_time} s", COLORS.SUCCESS, "MAIN")
         root.mainloop()
     except Exception as e:
