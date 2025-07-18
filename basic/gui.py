@@ -49,6 +49,7 @@ class MainWindow(Window):
         self.toolbar = False
         self.stop_gyrate = False
         self.need_update = False
+        self.working = True
         self.flipping_text = flipping
         FPS = fps
 
@@ -142,6 +143,7 @@ class MainWindow(Window):
         self.toolbar_frame.place(x=zoom(75), y=zoom(100), width=zoom(150), height=zoom(0))
 
         self.icon_label.bind("<ButtonRelease-1>", self.toggle_toolbar)
+        self.icon_img.bind("<ButtonRelease-1>", self.toggle_toolbar)
         self.stop_button.bind("<ButtonRelease-1>", self.toggle_pausing)
         self.prev_button.bind("<ButtonRelease-1>", self.skip_previous)
         self.next_button.bind("<ButtonRelease-1>", self.skip_next)
@@ -161,10 +163,12 @@ class MainWindow(Window):
         debug(f"Generate Main Window use: {time.time() - start_time} s", COLORS.SUCCESS, "GUI")
 
     def update_version(self):
+        # time.sleep(2)
         speed_time = 0
         speed_size = 0
         speed_timer = 0
         speed = 0
+        self.paused = False
 
         def _download_listener(blocknum, bs, size):
             nonlocal speed_time, speed_size, speed_timer, speed
@@ -188,10 +192,21 @@ class MainWindow(Window):
                 speed_timer = 0
 
             now_value = min(size, round(blocknum * bs))
+
             self.title_label.configure(text=f"{lang.LANG['main.interface.updating']}")
             self.artist_label.configure(text=f"{division(now_value, size) * 100:.2f}% {speed} Mbps")
+            # debug(f"{division(now_value, size) * 100:.2f}% {speed} Mbps")
 
         URL = f'{ARCHIVE_HOST}/archives/kanki_package.zip'
+        debug("Downloading Kanki Package", COLORS.INFO, "UPDATER")
+        self.working = False
+        x = 0
+        y = 0
+        width = self.winfo_width()
+        height = self.winfo_height()
+        self.update_infos(lang.LANG['main.interface.updating'], "----")
+        self.title_label.place(x=zoom(0), y=zoom(0), width=zoom(400), height=zoom(37))
+        self.artist_label.place(x=zoom(0), y=zoom(0), width=zoom(400), height=zoom(37))
         urllib.request.urlretrieve(URL, f"{TEMP_PATH}\\main_package.zip", reporthook=_download_listener)
 
         def extractor(src, dst, mod=False):
@@ -309,7 +324,9 @@ class MainWindow(Window):
         IMG_CACHE = []
         base = self.inner
         start_time = time.time()
+
         if not os.path.exists("assets\\gyrating\\sprite.png"):
+            os.makedirs("assets\\gyrating", exist_ok=True)
             self.generate_sprite_sheet()
         sprite = Image.open("assets\\gyrating\\sprite.png")
         zoomed = zoom(75)
@@ -336,10 +353,31 @@ class MainWindow(Window):
             self.toolbar = False
             widget.move_to(self.toolbar_frame, x=zoom(75), y=zoom(100), width=zoom(150), height=zoom(0),
                            fps=FPS, delay=0.25)
+
+            covered = False
+            if CONFIG["CONFIG"]["album"] == "true":
+                covered = True
+
+            if covered:
+                if covered:
+                    widget.move_to(self.icon_img, fps=FPS, x=zoom(75), y=zoom(112), width=zoom(0), height=zoom(75),
+                                   after_functions=[self.icon_img.place_forget])
+                else:
+                    self.icon_img.place_forget()
         else:
             self.toolbar = True
             widget.move_to(self.toolbar_frame, x=zoom(75), y=zoom(75), width=zoom(150), height=zoom(40),
                            fps=FPS, delay=0.25)
+            covered = False
+            if CONFIG["CONFIG"]["album"] == "true":
+                covered = True
+
+            if covered:
+                if covered:
+                    self.icon_img.place(x=zoom(75), y=zoom(112), width=zoom(0), height=zoom(75))
+                    widget.move_to(self.icon_img, fps=FPS, x=zoom(0), y=zoom(112), width=zoom(75), height=zoom(75))
+                else:
+                    self.icon_img.place_forget()
 
     def update_infos(self, title, artist):
         x = 0
@@ -376,6 +414,11 @@ class MainWindow(Window):
 
         if CONFIG["CONFIG"]["album"] != "true":
             covered = False
+
+        if not title:
+            title = "----"
+        if not artist:
+            artist = "----"
 
         self.length = length = self.font_ti.measure(title)
         self.length2 = length2 = self.font_ar.measure(artist)

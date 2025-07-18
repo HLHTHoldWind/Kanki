@@ -10,7 +10,7 @@ from threading import Thread
 def get_info(root):
     _ti = ""
     _ar = ""
-    while True:
+    while root.working:
         with open(f"{LOCAL_PATH}\\artist.txt", "rb") as f:
             artist = f.read().decode("utf-8")
 
@@ -31,7 +31,8 @@ def main():
         fps = int(CONFIG["CONFIG"]["fps"])
         Thread(target=kanki.run).start()
         root = gui.MainWindow(flipping=flip, fps=fps)
-        Thread(target=get_info, args=(root,)).start()
+        if not root.need_update:
+            Thread(target=get_info, args=(root,)).start()
         debug(f"Starting took {time.time() - start_time} s", COLORS.SUCCESS, "MAIN")
         root.mainloop()
     except Exception as e:
