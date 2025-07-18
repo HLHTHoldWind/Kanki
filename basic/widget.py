@@ -6,13 +6,38 @@ import math
 import win32api
 import pygame
 from basic.constants import *
+from basic.movement import *
 
 # moving functions
 SAMPLE_FUNCTION = ("function definition: def", "x_start: num", "x_end: num", "y_offset: num")
 COSINE = (math.cos, math.pi, math.pi * 2, 1)
+CUBIC = (ease_in_out_cubic_scaled, 0, 1, 0)
+SQUD = (ease_out_quad, 0, 1, 0)
+STEP = (smoothstep, 0, 1, 0)
+WINDOWS10 = (windows10_cubic_bezier, 0, 1, 0)
+WINDOWS11 = (windows11_cubic_bezier, 0, 1, 0)
+GOOGLE_IN = (g_moving_in, 0, 1, 0)
+GOOGLE_OUT = (g_moving_out, 0, 1, 0)
+CHROME = (g_default, 0, 1, 0)
+WINDOWS11_BOUNCE = (windows11_bounce_bezier, 0, 1, 0)
+ELASTIC_OUT = (ease_out_elastic_gentle, 0, 1, 0)
+ELASTIC_IN_OUT = (ease_in_out_elastic, 0, 1, 0)
+BOUNCE = (ease_in_out_cubic_bounce, 0, 1, 0)
+LINEAR = (lambda x: x, 0, 1, 0)
 
 pygame.init()
 
+M_FUNC = {
+    "COSINE": COSINE,
+    "CUBIC": CUBIC,
+    "SQUD": SQUD,
+    "WINDOWS10": WINDOWS10,
+    "WINDOWS11": WINDOWS11,
+    "GOOGLE": [GOOGLE_IN, GOOGLE_OUT],
+    "CHROME": CHROME,
+    "BOUNCE": BOUNCE,
+    "LINEAR": LINEAR
+}
 
 # definitions
 def noFun(*event):
@@ -118,17 +143,24 @@ def moving(widget, x=None, y=None, width=None, height=None, delay=0.5, fps=60, s
 
     fps_delay = get_frame_rate_delay(fps)
 
+    FUNC = M_FUNC["GOOGLE"]
+    if isinstance(FUNC, list):
+        if direction_width == -1 or direction_height == -1:
+            FUNC = FUNC[1]
+        else:
+            FUNC = FUNC[0]
+
     if isinstance(advance_delay, dict):
-        velocity_x = get_func_velocities(length_x, advance_delay["x"], fps_delay, COSINE)
-        velocity_y = get_func_velocities(length_y, advance_delay["y"], fps_delay, COSINE)
-        velocity_width = get_func_velocities(length_width, advance_delay["width"], fps_delay, COSINE)
-        velocity_height = get_func_velocities(length_height, advance_delay["height"], fps_delay, COSINE)
+        velocity_x = get_func_velocities(length_x, advance_delay["x"], fps_delay, FUNC)
+        velocity_y = get_func_velocities(length_y, advance_delay["y"], fps_delay, FUNC)
+        velocity_width = get_func_velocities(length_width, advance_delay["width"], fps_delay, FUNC)
+        velocity_height = get_func_velocities(length_height, advance_delay["height"], fps_delay, FUNC)
 
     else:
-        velocity_x = get_func_velocities(length_x, delay, fps_delay, COSINE)
-        velocity_y = get_func_velocities(length_y, delay, fps_delay, COSINE)
-        velocity_width = get_func_velocities(length_width, delay, fps_delay, COSINE)
-        velocity_height = get_func_velocities(length_height, delay, fps_delay, COSINE)
+        velocity_x = get_func_velocities(length_x, delay, fps_delay, FUNC)
+        velocity_y = get_func_velocities(length_y, delay, fps_delay, FUNC)
+        velocity_width = get_func_velocities(length_width, delay, fps_delay, FUNC)
+        velocity_height = get_func_velocities(length_height, delay, fps_delay, FUNC)
 
     total_frames = round(delay / fps_delay)
     start_time = time.time()
@@ -258,7 +290,7 @@ def label_print(widget, string: str, during=0.25, step=True, step_delay=0.75, FP
     length = 0
     delay = 1 / FPS
     if step:
-        wait_time = step_delay / len(string)
+        wait_time = step_delay / len(string) if len(string) > 0 else 0
         wait_step = round(wait_time / delay)
     else:
         wait_step = 0

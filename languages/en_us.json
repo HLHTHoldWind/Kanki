@@ -11,9 +11,13 @@
   "config.interface": "Interface",
   "config.interface.fps": "FPS",
   "config.interface.flip": "Flipping Text",
+  "config.interface.album": "Album Cover",
 
   "miniicon.show": "Show/Hide Kanki",
   "miniicon.quit": "Quit Kanki",
+
+  "main.interface.updating": "Updating...",
+  "main.interface.extracting": "Extracting...",
 
   "error.game_root": "Can't find cs directory!",
   "error.game_log": "No cs console.log on recording!",

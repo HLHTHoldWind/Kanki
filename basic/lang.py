@@ -38,8 +38,8 @@ def load_lang():
             else:
                 with open("languages\\en_us.json", "rb") as file:
                     LANG = json.load(file)
-            print(LANG["language_name"])
-            print(LANG_DICT)
+            debug(LANG["language_name"], COLORS.INFO, "LANG")
+            # debug(str(LANG_DICT), COLORS.INFO, "LANG")
             break
 
         except KeyError:

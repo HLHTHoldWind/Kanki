@@ -28,6 +28,11 @@
   "miniicon.show": "顯示/隱藏カンキ",
   "miniicon.quit": "退出カンキ",
 
+
+  "config.interface.album": "專輯封面",
+  "main.interface.updating": "更新中...",
+  "main.interface.extracting": "解壓縮中...",
+
   "error.game_root": "找不到Counter Strike游戲資料夾!",
   "error.game_log": "console.log無輸出!"
 }

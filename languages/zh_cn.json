@@ -29,6 +29,11 @@
   "miniicon.show": "显示/隐藏 Kanki",
   "miniicon.quit": "关闭 Kanki",
 
+
+  "config.interface.album": "专辑封面",
+  "main.interface.updating": "更新中...",
+  "main.interface.extracting": "解压中...",
+
   "error.game_root": "无法找到CS地址!",
   "error.game_log": "console.log无输出!"
 }

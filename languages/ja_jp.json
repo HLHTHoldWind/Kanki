@@ -15,6 +15,11 @@
   "miniicon.show": "カンキを表示/非表示",
   "miniicon.quit": "カンキを出る",
 
+
+  "config.interface.album": "アルバムカバー",
+  "main.interface.updating": "更新中...",
+  "main.interface.extracting": "展開中...",
+
   "error.game_root": "Can't find cs directory!",
   "error.game_log": "No cs console.log on recording!",
   "config.account_name": "Main player id",

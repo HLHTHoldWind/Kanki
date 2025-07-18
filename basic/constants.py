@@ -1,11 +1,34 @@
+import time
+
 import ctypes
 import locale
+import logging
 import os
 import configparser
 import json
 WORK_PATH = os.getcwd()
 USER_PATH = os.path.expanduser('~')
 CONFIG = configparser.ConfigParser()
+
+MAIN_VERSION = 200
+ARCHIVE_HOST = "https://files.hlhtstudios.com"
+RUN_PATH = os.getcwd()
+
+log_name = time.time()
+os.makedirs("logs", exist_ok=True)
+log_file_path = f'{RUN_PATH}\\logs\\log_{str(log_name).replace(".", "_")}.log'
+LOGGER = logging.getLogger("[HCollector]")
+LOGGER.propagate = False
+LOGGER.setLevel(logging.DEBUG)
+fh = logging.FileHandler(log_file_path, mode='w')
+fh.setLevel(logging.DEBUG)
+
+# Create formatter and add it to the handler
+formatter = logging.Formatter('%(name)s [%(levelname)s]: %(message)s ')
+fh.setFormatter(formatter)
+
+# Add the handler to the logger
+LOGGER.addHandler(fh)
 
 C_START = int("4E00", base=16)
 C_END = int("9FFF", base=16)
@@ -51,8 +74,8 @@ class Color:
 class COLORS:
     PINK = Color('[95m', "INFO", "#e4007f")
     BLUE = Color('[94m', "INFO", "#00a0e9")
-    CYAN = Color('[96m', "INFO", "#00f0e8")
-    GREEN = INFO = SUCCESS = Color('[92m', "INFO", "#4add43")
+    CYAN = INFO = Color('[96m', "INFO", "#00f0e8")
+    GREEN = SUCCESS = Color('[92m', "INFO", "#4add43")
     YELLOW = WARNING = Color('[93m', "WARNING", "#ffff00")
     RED = ERROR = Color('[91m', "ERROR", "#ff0000")
     LIGHT_GRAY = Color('[37m', "COMMAND", "#c8c3bc")
@@ -103,6 +126,19 @@ LANGUAGE_CODES = {"english": "en", "japanese": "ja", "chinese": "zh-cn",
                   "russian": "ru", "turkish": "tr"}
 
 
+def create_log_time():
+    timestamp = time.localtime(time.time())
+    time_y = str(timestamp.tm_year)
+    time_M = str(timestamp.tm_mon)
+    time_d = str(timestamp.tm_mday)
+    time_h = str(timestamp.tm_hour).rjust(2, '0')
+    time_m = str(timestamp.tm_min).rjust(2, '0')
+    time_s = str(timestamp.tm_sec).rjust(2, '0')
+    date_text = f"{time_y}/{time_M}/{time_d}"
+    time_text = f"{time_h}:{time_m}:{time_s}"
+    return f"[{date_text} {time_text}]"
+
+
 def init_config():
     if not os.path.exists(TEMP_PATH):
         os.makedirs(TEMP_PATH, exist_ok=True)
@@ -111,7 +147,8 @@ def init_config():
     with open(f"{LOCAL_PATH}\\config.ini", "w") as configfile:
         CONFIG["CONFIG"] = {
             "lang": default_lang,
-            "flip": "false",
+            "flip": "true",
+            "album": "true",
             "fps": "120"
         }
         CONFIG.write(configfile)
@@ -122,9 +159,34 @@ def test_config():
     try:
         CONFIG.read(f"{LOCAL_PATH}\\config.ini")
         awa = CONFIG["CONFIG"]["lang"]
+        awa = CONFIG["CONFIG"]["flip"]
+        awa = CONFIG["CONFIG"]["album"]
         # awa = CONFIG["CONFIG"]["theme"]
     except KeyError:
         init_config()
+
+
+def debug(text, style=COLORS.NONE, host="TEST"):
+    timestamp = time.localtime(time.time())
+    time_y = str(timestamp.tm_year)
+    time_M = str(timestamp.tm_mon)
+    time_d = str(timestamp.tm_mday)
+    time_h = str(timestamp.tm_hour).rjust(2, '0')
+    time_m = str(timestamp.tm_min).rjust(2, '0')
+    time_s = str(timestamp.tm_sec).rjust(2, '0')
+    date_text = f"{time_y}/{time_M}/{time_d}"
+    time_text = f"{time_h}:{time_m}:{time_s}"
+    print(f"{style.color}[{date_text} {time_text}] [{host}|{style.name}] {text}{COLORS.NONE.color}")
+    if style == COLORS.ERROR:
+        LOGGER.error(f"[{date_text} {time_text}] [{host}|{style.name}] {text}{COLORS.NONE.color}")
+    elif style == COLORS.WARNING:
+        LOGGER.warning(f"[{date_text} {time_text}] [{host}|{style.name}] {text}{COLORS.NONE.color}")
+    elif style == COLORS.INFO:
+        LOGGER.info(f"[{date_text} {time_text}] [{host}|{style.name}] {text}{COLORS.NONE.color}")
+    elif style == COLORS.SUCCESS:
+        LOGGER.info(f"[{date_text} {time_text}] [{host}|{style.name}] {text}{COLORS.NONE.color}")
+    else:
+        LOGGER.debug(f"[{date_text} {time_text}] [{host}|{style.name}] {text}{COLORS.NONE.color}")
 
 
 test_config()

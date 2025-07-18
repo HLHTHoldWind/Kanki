@@ -1,6 +1,10 @@
 import ctypes
 import importlib
 import time
+
+import subprocess
+import urllib
+import zipfile
 from threading import Thread
 import os
 import asyncio
@@ -10,6 +14,7 @@ import tkinter as tk
 import basic.widget as widget
 import basic.kanki as kanki
 import pystray
+import pywinstyles
 import basic.lang as lang
 from basic.constants import *
 
@@ -32,6 +37,7 @@ FPS = 120
 class MainWindow(Window):
     def __init__(self, flipping=False, fps=120):
         global FPS
+        start_time = time.time()
         Window.__init__(self, themename="darkly2")
         self.withdraw()
         self.length = 0
@@ -41,6 +47,7 @@ class MainWindow(Window):
         self.paused = False
         self.toolbar = False
         self.stop_gyrate = False
+        self.need_update = False
         self.flipping_text = flipping
         FPS = fps
 
@@ -61,7 +68,7 @@ class MainWindow(Window):
         self.small.run_detached()
 
         self.load_l = Label(self)
-        widget.label_print(self.load_l, "ikura（いくら）")
+        widget.label_print(self.load_l, "a（い")
 
         icon = ImageTk.PhotoImage(self.icon.resize((zoom(75), zoom(75))))
         IMG_CACHE.append(icon)
@@ -77,6 +84,9 @@ class MainWindow(Window):
         self.Style.configure("TFrame", background="#1b1b1b")
 
         self.load_animation()
+        self.background_w = Frame(self)
+        pywinstyles.set_opacity(self.background_w, 0.0)
+        # pywinstyles.apply_style(self, "transparent")
 
         self.main_widget = Frame(self)
 
@@ -86,6 +96,9 @@ class MainWindow(Window):
         # self.icon_label = Canvas(self.main_widget, background="#1b1b1b", borderwidth=0, highlightthickness=0)
         self.icon_label = Label(self.main_widget, background="#1b1b1b", borderwidth=0, cursor="hand2")
         self.icon_label.place(x=zoom(0), y=zoom(112), width=zoom(75), height=zoom(75))
+
+        self.icon_img = Label(self.main_widget, background="#1b1b1b", borderwidth=0, cursor="hand2")
+        self.icon_img.place(x=zoom(75), y=zoom(112), width=zoom(0), height=zoom(75))
 
         self.artist_frame = Frame(self.main_widget)
         self.artist_label = Label(self.artist_frame, background="#1b1b1b", foreground="#ffffff", borderwidth=0,
@@ -115,10 +128,13 @@ class MainWindow(Window):
         self.next_button.place(x=zoom(110), y=zoom(10), width=zoom(30), height=zoom(30))
 
         self.attributes("-transparentcolor", "#1b1b1b")
+        # self.wm_attributes("-transparent", True)
+        # self.config(bg='systemTransparent')
 
         self.artist_frame.place(x=zoom(80), y=zoom(150), width=zoom(225), height=zoom(37))
         self.title_frame.place(x=zoom(80), y=zoom(117), width=zoom(225), height=zoom(37))
         self.main_widget.place(x=0, y=zoom(100), width=zoom(75), height=self.winfo_height())
+        self.background_w.place(x=0, y=0, width=self.winfo_width(), height=self.winfo_height())
         self.toolbar_frame.place(x=zoom(75), y=zoom(100), width=zoom(150), height=zoom(0))
 
         self.icon_label.bind("<ButtonRelease-1>", self.toggle_toolbar)
@@ -131,9 +147,78 @@ class MainWindow(Window):
         self.config_win = ConfigurateWindow(master=self)
         Thread(target=self.topMost).start()
         Thread(target=self.gyrating).start()
-        Thread(target=self.scrolling_t).start()
-        Thread(target=self.scrolling_a).start()
-        Thread(target=self.check_pause).start()
+        if self.need_update:
+            Thread(target=self.update_version).start()
+            debug("Starting Update", COLORS.SUCCESS, "GUI")
+        else:
+            Thread(target=self.scrolling_t).start()
+            Thread(target=self.scrolling_a).start()
+            Thread(target=self.check_pause).start()
+        debug(f"Generate Main Window use: {time.time() - start_time} s", COLORS.SUCCESS, "GUI")
+
+    def update_version(self):
+        speed_time = 0
+        speed_size = 0
+        speed_timer = 0
+        speed = 0
+
+        def _download_listener(blocknum, bs, size):
+            nonlocal speed_time, speed_size, speed_timer, speed
+            if speed_time == 0:
+                speed_time = time.time()
+
+            def division(x, y):
+                if 0 not in (x, y):
+                    return x / y
+                else:
+                    return 0
+
+            speed_size += bs
+            speed_timer += 1
+
+            if speed_timer > 100:
+                duration = time.time() - speed_time
+                speed_time = 0
+                speed = round(speed_size / (1024 * 1024 * duration) * 8, 2) if duration > 0 else 0
+                speed_size = 0
+                speed_timer = 0
+
+            now_value = min(size, round(blocknum * bs))
+            self.title_label.configure(text=f"{lang.LANG['main.interface.updating']}")
+            self.artist_label.configure(text=f"{division(now_value, size) * 100:.2f}% {speed} Mbps")
+
+        URL = f'{ARCHIVE_HOST}/archives/kanki_package.zip'
+        urllib.request.urlretrieve(URL, f"{TEMP_PATH}\\main_package.zip", reporthook=_download_listener)
+
+        def extractor(src, dst, mod=False):
+            nonlocal speed_time, speed_size, speed_timer, speed
+
+            def division(x, y):
+                if 0 not in (x, y):
+                    return x / y
+                else:
+                    return 0
+
+            with zipfile.ZipFile(src, "r") as zip_ref:
+                now_size = 0
+                max_size = len(zip_ref.namelist())
+                for z_file in zip_ref.namelist():
+                    try:
+                        file_path = os.path.join(dst, z_file)
+
+                        # Check if the file already exists
+                        if os.path.exists(file_path) and os.path.isfile(file_path):
+                            # Remove the existing file
+                            os.remove(file_path)
+                        zip_ref.extract(member=z_file, path=dst)
+                    except PermissionError:
+                        pass
+                    now_size += 1
+                    self.title_label.configure(text=f"{lang.LANG['main.interface.extracting']}")
+                    self.artist_label.configure(text=f"{division(now_size, max_size) * 100:.2f}%")
+
+        extractor(f"{TEMP_PATH}\\main_package.zip", RUN_PATH)
+        restart()
 
     def set_japanese_mode(self):
         self.font_ti = tk.font.Font(family="Yu Gothic", size=22, weight="bold")
@@ -167,19 +252,69 @@ class MainWindow(Window):
         os._exit(114514)
         self.destroy()
 
+    def prepare_image_premultiplied(self, path, size):
+        img = Image.open(path).resize(size, resample=Image.BILINEAR).convert("RGBA")
+
+        # Premultiply alpha (so edge pixels are not "white-on-black" but "white-on-transparent")
+        r, g, b, a = img.split()
+        r = r.point(lambda i: i * (a.getpixel((0, 0)) / 255))
+        g = g.point(lambda i: i * (a.getpixel((0, 0)) / 255))
+        b = b.point(lambda i: i * (a.getpixel((0, 0)) / 255))
+        premultiplied = Image.merge("RGBA", (r, g, b, a))
+
+        # Composite onto truly transparent canvas (not needed if alpha already clean)
+        final = Image.new("RGBA", img.size, (0, 0, 0, 0))
+        final.alpha_composite(premultiplied)
+
+        return ImageTk.PhotoImage(final)
+
+    def premultiply_alpha(self, image: Image.Image) -> Image.Image:
+        """Convert image to premultiplied alpha (to remove dark edge halos)."""
+        image = image.convert("RGBA")
+        pixels = image.load()
+        for y in range(image.height):
+            for x in range(image.width):
+                r, g, b, a = pixels[x, y]
+                if a == 0:
+                    pixels[x, y] = (0, 0, 0, 0)
+                else:
+                    r = int(r * a / 255)
+                    g = int(g * a / 255)
+                    b = int(b * a / 255)
+                    pixels[x, y] = (r, g, b, a)
+        return image
+
+    def generate_sprite_sheet(self, path="assets\\gyrating\\sprite.png", frame_count=600):
+        zoomed = zoom(75)
+        sprite_size = (zoomed, zoomed * frame_count)
+
+        sprite = Image.new("RGBA", sprite_size, (0, 0, 0, 0))
+        for i in range(frame_count):
+            angle = i * 0.6 * -1
+            ring_rotated = self.ring.rotate(angle, resample=Image.BILINEAR)
+            frame = Image.new("RGBA", (self.ring.width, self.ring.height), (0, 0, 0, 0))
+            frame.paste(ring_rotated, (0, 0), ring_rotated)
+            frame = frame.resize((zoomed, zoomed), resample=Image.BILINEAR)
+
+            sprite.paste(frame, (0, zoomed * i))
+
+        sprite.save(path, "PNG")
+
     def load_animation(self):
         global IMG_CACHE, IMG_CACHE2, IMG_CACHE3
         IMG_CACHE = []
         base = self.inner
+        start_time = time.time()
+        if not os.path.exists("assets\\gyrating\\sprite.png"):
+            self.generate_sprite_sheet()
+        sprite = Image.open("assets\\gyrating\\sprite.png")
+        zoomed = zoom(75)
+        if sprite.width != zoomed or sprite.height != zoomed*600:
+            self.generate_sprite_sheet()
+
         for i in range(600):
-            name = f"gyrating_{i}"
-            if not os.path.exists(f"assets\\gyrating\\{name}"):
-                ring = self.ring.rotate(i * 0.6 * -1, resample=Image.BILINEAR)
-                img = Image.new("RGBA", (self.ring.width, self.ring.height))
-                # img.paste(base, (0, 0))  # if use new icon
-                img.paste(ring, (0, 0), ring)
-                img.save(f"assets\\gyrating\\{name}", "PNG")
-            IMG_CACHE.append(ImageTk.PhotoImage(Image.open(f"assets\\gyrating\\{name}").resize((zoom(75), zoom(75)), resample=Image.BILINEAR)))
+            frame = sprite.crop((0, zoomed * i, zoomed, zoomed * (i + 1)))
+            IMG_CACHE.append(ImageTk.PhotoImage(frame))
 
         IMG_CACHE2 = []
         im = Image.open("assets\\pausing.gif")
@@ -190,6 +325,7 @@ class MainWindow(Window):
 
         IMG_CACHE3.append(ImageTk.PhotoImage(Image.open("assets\\previous.png").resize((zoom(30), zoom(30)))))
         IMG_CACHE3.append(ImageTk.PhotoImage(Image.open("assets\\next.png").resize((zoom(30), zoom(30)))))
+        debug(f"Load image resources took {time.time() - start_time} s", COLORS.SUCCESS, "GUI")
 
     def toggle_toolbar(self, event=None):
         if self.toolbar:
@@ -208,6 +344,8 @@ class MainWindow(Window):
         height = self.winfo_height()
         self.restart = True
         widget.move_to(self.main_widget, fps=FPS, x=x, y=y, width=zoom(75), height=height)
+        # widget.move_to(self.icon_img, fps=FPS, x=zoom(75), y=zoom(112), width=zoom(0), height=zoom(75))
+        self.icon_img.place_forget()
         self.stop_scrolling = True
 
         time.sleep(0.75)
@@ -215,12 +353,33 @@ class MainWindow(Window):
             self.set_japanese_mode()
         else:
             self.set_normal_mode()
+
+        covered = False
+
+        if os.path.exists(f"{LOCAL_PATH}\\cover.png"):
+            try:
+                time.sleep(0.05)
+                icon_img = Image.open(f"{LOCAL_PATH}\\cover.png")
+                icon_img.load()
+                # icon_img.show()
+                icon_img = icon_img.convert("RGBA").resize((zoom(75), zoom(75)), resample=Image.BILINEAR)
+                icon_tk = ImageTk.PhotoImage(icon_img)
+                GLOBAL_IMG_CACHE[f"{LOCAL_PATH}\\cover.png"] = icon_tk
+                self.icon_img.configure(image=icon_tk)
+                covered = True
+            except Exception as e:
+                debug(e, COLORS.ERROR, "GUI")
+
+        if CONFIG["CONFIG"]["album"] != "true":
+            covered = False
+
         self.length = length = self.font_ti.measure(title)
         self.length2 = length2 = self.font_ar.measure(artist)
         self.title_label.configure(text=title)
         self.title_label2.configure(text=title)
         self.title_label.place(x=zoom(0), y=zoom(0), width=length, height=zoom(37))
         self.title_label2.place(x=zoom(100) + length, y=zoom(0), width=length, height=zoom(37))
+        self.icon_img.place(x=zoom(75), y=zoom(112), width=zoom(0), height=zoom(75))
         if self.length < zoom(225):
             self.title_label2.place_forget()
         self.artist_label.configure(text=artist)
@@ -230,6 +389,11 @@ class MainWindow(Window):
         if self.length2 < zoom(225):
             self.artist_label2.place_forget()
         widget.move_to(self.main_widget, fps=FPS, x=x, y=y, width=width, height=height)
+        if covered:
+            self.icon_img.place(x=zoom(75), y=zoom(112), width=zoom(0), height=zoom(75))
+            widget.move_to(self.icon_img, fps=FPS, x=zoom(0), y=zoom(112), width=zoom(75), height=zoom(75))
+        else:
+            self.icon_img.place_forget()
         if self.flipping_text:
             self.title_label.configure(text="")
             self.artist_label.configure(text="")
@@ -239,6 +403,12 @@ class MainWindow(Window):
             time.sleep(0.25)
             Thread(target=widget.label_print, args=(self.artist_label, artist)).start()
         self.stop_scrolling = False
+        if covered:
+            time.sleep(2)
+            widget.move_to(self.icon_img, fps=FPS, x=zoom(75), y=zoom(112), width=zoom(0), height=zoom(75),
+                           after_functions=[self.icon_img.place_forget])
+        else:
+            self.icon_img.place_forget()
 
     def topMost(self):
         while True:
@@ -335,7 +505,7 @@ class MainWindow(Window):
             else:
                 kanki.play(session)
         except (TypeError, AttributeError) as e:
-            print(f"{e}")
+            debug(f"{e}", COLORS.ERROR, "GUI")
 
         self.stop_gyrate = False
 
@@ -345,7 +515,7 @@ class MainWindow(Window):
             artist, title, info, session, paused = asyncio.run(kanki.get_media_info())
             kanki.next_s(session)
         except (TypeError, AttributeError) as e:
-            print(f"{e}")
+            debug(f"{e}", COLORS.ERROR, "GUI")
 
     def skip_previous(self, event=None):
         self.focus_set()
@@ -353,7 +523,7 @@ class MainWindow(Window):
             artist, title, info, session, paused = asyncio.run(kanki.get_media_info())
             kanki.previous(session)
         except (TypeError, AttributeError) as e:
-            print(f"{e}")
+            debug(f"{e}", COLORS.ERROR, "GUI")
 
     def check_pause(self):
         while True:
@@ -418,7 +588,8 @@ class ConfigurateWindow(Toplevel):
         self.cross = ImageTk.PhotoImage(Image.open("assets\\cross.png").resize((zoom(16), zoom(16))), master=self)
         self.ti_icon = ImageTk.PhotoImage(self.icon.resize((zoom(16), zoom(16))), master=self.master)
         self.ti_icon_la = ImageTk.PhotoImage(self.icon.resize((zoom(150), zoom(150))), master=self)
-        self.thanks_tk = ImageTk.PhotoImage(Image.open("assets\\07222024_2.png").resize((zoom(100), zoom(100))), master=self)
+        self.thanks_tk = ImageTk.PhotoImage(Image.open("assets\\07222024_2.png").resize((zoom(100), zoom(100))),
+                                            master=self)
         GLOBAL_IMG_CACHE["cross"] = self.cross
         GLOBAL_IMG_CACHE["ti_icon"] = self.ti_icon
         GLOBAL_IMG_CACHE["thanks"] = self.thanks_tk
@@ -443,7 +614,7 @@ class ConfigurateWindow(Toplevel):
         self.iconLabel.place(x=zoom(2), y=zoom(0), width=zoom(25), height=zoom(25))
         self.titleLabel.place(x=zoom(27), y=zoom(0), width=zoom(200), height=zoom(25))
         self.closeButton.place(x=zoom(360), y=zoom(0), width=zoom(40), height=zoom(25))
-        
+
         self.titleFrame.place(x=zoom(0), y=zoom(0), width=zoom(400), height=zoom(25))
         self.mainFrame.place(x=zoom(0), y=zoom(25), width=zoom(400), height=zoom(500))
 
@@ -454,18 +625,25 @@ class ConfigurateWindow(Toplevel):
         self.shortcut_frame = LabelFrame(self.mainFrame, text=lang.LANG["config.shortcut"])
 
         self.ui_lang_frame = Frame(self.basic_frame)
-        self.ui_lang_tip = Label(self.ui_lang_frame, text=lang.LANG["config.ui_lang"] + "*", style="normal.TLabel")
+        self.ui_lang_tip = Label(self.ui_lang_frame, text=lang.LANG["config.lang"] + "*", style="normal.TLabel")
         langs = list(LANG_DICT.keys())
         # print(langs)
-        self.ui_lang_box = Combobox(self.ui_lang_frame, values=langs)
+        self.ui_lang_box = Combobox(self.ui_lang_frame, state="readonly", values=langs)
         self.ui_lang_box.bind("<<ComboboxSelected>>", self.change_lang)
+        self.ui_lang_box.bind("<FocusOut>", self.on_combobox_close)
+        self.ui_lang_box.bind("<Button-1>", self.on_combobox_open)
         self.ui_lang_box.current(langs.index(lang.LANG["language_name"]))
 
         self.flip_frame = Frame(self.inter_frame)
         self.flip_bool = BooleanVar(self)
+        self.album_bool = BooleanVar(self)
         self.flip_bool.set(True) if CONFIG["CONFIG"]["flip"] == "true" else self.flip_bool.set(False)
+        self.album_bool.set(True) if CONFIG["CONFIG"]["album"] == "true" else self.album_bool.set(False)
         self.flip_chk = Checkbutton(self.flip_frame, style="success.Roundtoggle.Toolbutton", command=self.set_flip,
                                     text=lang.LANG["config.interface.flip"], variable=self.flip_bool)
+
+        self.album_chk = Checkbutton(self.flip_frame, style="success.Roundtoggle.Toolbutton", command=self.set_album,
+                                     text=lang.LANG["config.interface.album"], variable=self.album_bool)
 
         self.cs_path_frame = Frame(self.basic_frame)
         self.cs_path_tip = Label(self.cs_path_frame, text=lang.LANG["config.game_path"] + "*", style="normal.TLabel")
@@ -536,8 +714,9 @@ class ConfigurateWindow(Toplevel):
         # self.language_frame.place(x=zoom(25), y=zoom(85), width=zoom(345), height=zoom(45))
         self.inter_frame.place(x=zoom(25), y=zoom(60), width=zoom(345), height=zoom(75))
         # self.dst_frame.place(x=zoom(0), y=zoom(0), width=zoom(150), height=zoom(25))
-        self.flip_frame.place(x=zoom(0), y=zoom(0), width=zoom(200), height=zoom(25))
+        self.flip_frame.place(x=zoom(0), y=zoom(0), width=zoom(200), height=zoom(50))
         self.flip_chk.place(x=zoom(0), y=zoom(0), width=zoom(150), height=zoom(25))
+        self.album_chk.place(x=zoom(0), y=zoom(25), width=zoom(150), height=zoom(25))
         self.ing_frame.place(x=zoom(150), y=zoom(0), width=zoom(190), height=zoom(25))
 
         self.dst_tip.place(x=zoom(0), y=zoom(0), width=zoom(100), height=zoom(25))
@@ -592,14 +771,22 @@ class ConfigurateWindow(Toplevel):
         self.geometry(f"{zoom(400)}x{zoom(0)}+{x}+{maxY + 1}")
         # self.appear()
 
+    def on_combobox_open(self, event=None):
+        # self.attributes("-topmost", False)
+        pass
+
+    def on_combobox_close(self, event=None):
+        # self.attributes("-topmost", True)
+        pass
+
     def topMost(self):
         while self.on_run:
             try:
                 self.attributes('-topmost', True)
                 self.lift()
-                time.sleep(0.01)
+                time.sleep(0.1)
             except tk.TclError as e:
-                print(f"tk.TclError: {e}")
+                debug(f"tk.TclError: {e}", COLORS.ERROR, "GUI")
 
     def set_flip(self, event=None):
         p_state = self.flip_bool.get()
@@ -615,8 +802,21 @@ class ConfigurateWindow(Toplevel):
         with open(f"{LOCAL_PATH}\\config.ini", "w") as config_f:
             CONFIG.write(config_f)
 
+    def set_album(self, event=None):
+        p_state = self.album_bool.get()
+        if p_state:
+            self.album_chk.update()
+            CONFIG["CONFIG"]["album"] = "true"
+        else:
+            self.album_chk.update()
+            CONFIG["CONFIG"]["album"] = "false"
+
+        with open(f"{LOCAL_PATH}\\config.ini", "w") as config_f:
+            CONFIG.write(config_f)
+
     def change_lang(self, event=None):
         global lang
+        self.on_combobox_close()
         language = self.ui_lang_box.get()
         CONFIG["CONFIG"]["lang"] = LANG_DICT[language]
         with open(f"{LOCAL_PATH}\\config.ini", "w") as config_f:
@@ -627,7 +827,7 @@ class ConfigurateWindow(Toplevel):
 
     def appear(self):
         self.on_run = True
-        Thread(target=self.topMost).start()
+        # Thread(target=self.topMost).start()
         self.grab_set()
         middle(self, zoom(400), 0)
         self.configure(width=zoom(400), height=0)
@@ -638,7 +838,9 @@ class ConfigurateWindow(Toplevel):
         x = maxX // 2 - winX // 2
         y = maxY // 2 - winY // 2
         self.deiconify()
+        self.ui_lang_box.lift()
         widget.move_to(self, x, y, zoom(400), zoom(525), fps=FPS, is_windows=True)
+        self.attributes("-topmost", True)
 
     def disappear(self):
         global IN_CONFIG
@@ -653,7 +855,7 @@ class ConfigurateWindow(Toplevel):
         maxY = winapi.GetSystemMetrics(1)
         x = maxX // 2 - winX // 2
         y = maxY // 2 - winY // 2
-        widget.move_to(self, x, maxY+1, zoom(400), zoom(0), fps=FPS, is_windows=True)
+        widget.move_to(self, x, maxY + 1, zoom(400), zoom(0), fps=FPS, is_windows=True)
 
 
 class SmallIcon(pystray.Icon):
@@ -747,3 +949,14 @@ def is_windows():
 
 def zoom(data) -> int:
     return round(data * ZOOM)
+
+
+def restart():
+    debug("Hard restarting via command line...", COLORS.WARNING, "MAIN")
+    try:
+        subprocess.Popen([f"{RUN_PATH}\\Python310\\pythonw.exe", f"{RUN_PATH}\\main.pyw"])
+        os._exit(114514)  # Immediate process exit, no cleanup
+    except Exception as e:
+        exc_cont = f"{create_log_time()}"
+        LOGGER.critical(str(e), exc_cont + " [MAIN]")
+        debug(f"Restart failed: {e}", COLORS.ERROR, "MAIN")
