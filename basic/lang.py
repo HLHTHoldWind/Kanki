@@ -1,3 +1,5 @@
+import basic.libimport
+basic.libimport.set_import_lib()
 import json
 import os
 import locale

@@ -1,7 +1,8 @@
+import basic.libimport
+basic.libimport.set_import_lib()
 import ctypes
 import importlib
 import time
-
 import subprocess
 import urllib
 import zipfile
@@ -26,6 +27,7 @@ trueWidth = winapi.GetSystemMetrics(0)
 
 ctypes.windll.shcore.SetProcessDpiAwareness(1)
 ZOOM = round((winapi.GetSystemMetrics(0) / trueWidth) + (0.1 * ((winapi.GetSystemMetrics(0) / trueWidth) / 2)), 1)
+print(ZOOM)
 
 IMG_CACHE = []
 IMG_CACHE2 = []
@@ -585,6 +587,12 @@ class MainWindow(Window):
             time.sleep(0.01)
 
     def gyrating(self):
+        def accurate_delay(delay):
+            """ Function to provide accurate time delay in millisecond"""
+            winmm = ctypes.windll.winmm
+            winmm.timeBeginPeriod(1)
+            time.sleep(delay / 1000)
+            winmm.timeEndPeriod(1)
         times = 0
         while True:
             if self.stop_gyrate:
@@ -608,7 +616,7 @@ class MainWindow(Window):
                         self.icon_label.configure(image=icon)
                         self.icon_label.update()
                         times += gap
-                        time.sleep(0.008)
+                        accurate_delay(8)
                 else:
                     gap = max(round(times / 60), 1)
                     while times >= 0:
@@ -616,13 +624,13 @@ class MainWindow(Window):
                         self.icon_label.configure(image=icon)
                         self.icon_label.update()
                         times -= gap
-                        time.sleep(0.008)
+                        accurate_delay(8)
                 times = 0
                 icon = IMG_CACHE[times]
                 self.icon_label.configure(image=icon)
                 self.icon_label.update()
                 self.restart = False
-            time.sleep(0.016)
+            accurate_delay(16)
 
 
 class ConfigurateWindow(Toplevel):
@@ -986,6 +994,28 @@ def darkWindow(win):
     value = ctypes.c_int(value)
     set_window_attribute(hwnd, rendering_policy, ctypes.byref(value),
                          ctypes.sizeof(value))
+
+
+def make_window_transparent(root, alpha=220, click_through=False):
+    GWL_EXSTYLE = -20
+    WS_EX_LAYERED = 0x00080000
+    WS_EX_TRANSPARENT = 0x00000020
+    LWA_COLORKEY = 0x00000001
+    LWA_ALPHA = 0x00000002
+
+    # Get Win32 API functions
+    SetWindowLong = ctypes.windll.user32.SetWindowLongW
+    GetWindowLong = ctypes.windll.user32.GetWindowLongW
+    SetLayeredWindowAttributes = ctypes.windll.user32.SetLayeredWindowAttributes
+    hwnd = root.winfo_id()
+    ex_style = GetWindowLong(hwnd, GWL_EXSTYLE)
+    ex_style |= WS_EX_LAYERED
+    if click_through:
+        ex_style |= WS_EX_TRANSPARENT
+    SetWindowLong(hwnd, GWL_EXSTYLE, ex_style)
+
+    # Set the transparency: alpha 0-255, lower is more transparent
+    SetLayeredWindowAttributes(hwnd, 0, alpha, LWA_ALPHA)
 
 
 def is_windows():

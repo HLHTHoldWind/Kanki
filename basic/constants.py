@@ -1,5 +1,6 @@
+import basic.libimport
+basic.libimport.set_import_lib()
 import time
-
 import ctypes
 import locale
 import logging
@@ -10,7 +11,7 @@ WORK_PATH = os.getcwd()
 USER_PATH = os.path.expanduser('~')
 CONFIG = configparser.ConfigParser()
 
-MAIN_VERSION = 201
+MAIN_VERSION = 202
 ARCHIVE_HOST = "https://files.hlhtstudios.com"
 RUN_PATH = os.getcwd()
 

@@ -1,10 +1,11 @@
+import basic.libimport
+basic.libimport.set_import_lib()
 import random
 from ttkbootstrap import *
 import time
 import threading
 import math
 import win32api
-import pygame
 from basic.constants import *
 from basic.movement import *
 
@@ -24,8 +25,6 @@ ELASTIC_OUT = (ease_out_elastic_gentle, 0, 1, 0)
 ELASTIC_IN_OUT = (ease_in_out_elastic, 0, 1, 0)
 BOUNCE = (ease_in_out_cubic_bounce, 0, 1, 0)
 LINEAR = (lambda x: x, 0, 1, 0)
-
-pygame.init()
 
 M_FUNC = {
     "COSINE": COSINE,
@@ -414,7 +413,10 @@ def label_print(widget, string: str, during=0.25, step=True, step_delay=0.75, FP
 
 def accurate_delay(delay):
     """ Function to provide accurate time delay in millisecond"""
-    pygame.time.wait(delay)
+    winmm = ctypes.windll.winmm
+    winmm.timeBeginPeriod(1)
+    time.sleep(delay / 1000)
+    winmm.timeEndPeriod(1)
 
 
 def get_moving_velocity(length, delay, fps_delay):

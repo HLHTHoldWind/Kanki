@@ -1,3 +1,5 @@
+import basic.libimport
+basic.libimport.set_import_lib()
 import win32gui
 import requests
 from io import BytesIO
