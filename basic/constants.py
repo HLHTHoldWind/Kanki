@@ -11,7 +11,7 @@ WORK_PATH = os.getcwd()
 USER_PATH = os.path.expanduser('~')
 CONFIG = configparser.ConfigParser()
 
-MAIN_VERSION = 202
+MAIN_VERSION = 210
 ARCHIVE_HOST = "https://files.hlhtstudios.com"
 RUN_PATH = os.getcwd()
 

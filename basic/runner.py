@@ -1,4 +1,6 @@
 import basic.libimport
+from PyQt5.QtWidgets import QApplication
+
 basic.libimport.set_import_lib()
 import asyncio
 import time
@@ -21,22 +23,34 @@ def get_info(root):
         if _ar != artist or _ti != title:
             _ti = title
             _ar = artist
-            root.update_infos(title, artist)
+            root.update_infos_signal.emit(title, artist)
 
         time.sleep(0.1)
 
 
 def main():
     try:
+        import sys
+        import traceback
+
+        def my_exception_hook(exctype, value, tb):
+            debug("Uncaught exception:" + ''.join(traceback.format_exception(exctype, value, tb)),
+                  COLORS.ERROR, "CORE")
+            sys.__excepthook__(exctype, value, tb)
+
+        sys.excepthook = my_exception_hook
         start_time = time.time()
         flip = True if CONFIG["CONFIG"]["flip"] == "true" else False
         fps = int(CONFIG["CONFIG"]["fps"])
         Thread(target=kanki.run).start()
-        root = gui.MainWindow(flipping=flip, fps=fps)
-        if not root.need_update:
-            Thread(target=get_info, args=(root,)).start()
+        app = QApplication([])
+        root = gui.MainWindow(flipping=flip, fps=fps, app=app)
+        root.item_configurate()
+        root.animate_binding()
+        root.display_all(get_info)
         debug(f"Starting took {time.time() - start_time} s", COLORS.SUCCESS, "MAIN")
-        root.mainloop()
+        app.exec_()
+        root.config_win.mainloop()
     except Exception as e:
         exc_cont = f"{create_log_time()}"
         LOGGER.critical(str(e), exc_cont + " [MAIN_START]")
